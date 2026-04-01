@@ -69,7 +69,6 @@
             font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s;
         }
         
-        /* Color Coding */
         .rating-group input[value="0"]:checked + label { background-color: var(--na-gray); color: white; }
         .rating-group input[value="1"]:checked + label, 
         .rating-group input[value="2"]:checked + label { background-color: var(--fail-red); color: white; }
@@ -158,14 +157,15 @@
                 <input type="hidden" id="finalScore" name="TotalScore">
                 <input type="hidden" id="finalPct" name="Percentage">
                 <input type="hidden" id="finalStatus" name="Status">
+                <input type="hidden" id="hiddenReportHtml" name="ReportHTML">
             </div>
 
-            <button type="button" id="submitBtn" class="save-btn" onclick="submitAudit()">🚀 SUBMIT POP IN REPORT</button>
+            <button type="button" id="submitBtn" class="save-btn" onclick="submitAudit()">🚀 SUBMIT & EMAIL POP IN REPORT</button>
         </form>
     </div>
 
     <script>
-        // Update this URL to point to your new Google Sheet for Pop Ins
+        // CRITICAL: Update this URL to point to your new Google Sheet for Pop Ins
         const G_URL = 'PASTE_YOUR_GOOGLE_URL_HERE';
 
         const questions = [
@@ -233,8 +233,7 @@
                     "Coleslaw is made correctly",
                     "Tostadas are fresh to taste",
                     "Enough hot dog buns are being defrosted",
-                    "Hot fudge warmers are set to 140 degrees (F)",
-                    "Caramel warmers are set to 100 degrees (F)",
+                    "Hot fudge warmers are set to 150 degrees (F)",
                     "Machine runner is keeping up with melts",
                     "Items are being scooped properly",
                     "Caliches and shakes are being blended properly"
@@ -279,7 +278,7 @@
                 if(sel) { 
                     answered++;
                     let val = parseInt(sel.value);
-                    if(val > 0) { // If it's NOT N/A
+                    if(val > 0) { 
                         totalScore += val;
                         questionsCounted++;
                     }
@@ -320,11 +319,53 @@
             }
             
             if(answered < totalQuestions) {
-                return alert(`Please answer all questions. You have answered ${answered} out of ${totalQuestions}. Select N/A if a question does not apply.`);
+                return alert(`Please answer all questions. You have answered ${answered} out of ${totalQuestions}.`);
             }
 
-            btn.innerText = "Submitting Pop In...";
+            btn.innerText = "Generating PDF & Sending Email...";
             btn.disabled = true;
+
+            // --- BUILD THE PDF DOCUMENT FORMAT ---
+            let pdfHtml = `
+                <div style="font-family: Arial, sans-serif; color: #333;">
+                    <h1 style="color: #0033A0;">Caliche's Pop In Inspection</h1>
+                    <table style="width: 100%; margin-bottom: 20px;">
+                        <tr>
+                            <td><strong>Location:</strong> ${document.getElementById('loc').value}</td>
+                            <td><strong>Date:</strong> ${document.getElementById('dt').value}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Conducted By:</strong> ${document.getElementById('conductor').value}</td>
+                            <td><strong>Shift Leader:</strong> ${document.getElementById('sldr').value} (${document.getElementById('shiftTime').value})</td>
+                        </tr>
+                    </table>
+                    <div style="background-color: #f4f4f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <h2 style="color: #E91E63; margin: 0;">Final Score: ${document.getElementById('pct').innerText}% (${document.getElementById('st').innerText})</h2>
+                        <p style="margin-bottom: 0;"><strong>Overall Comments:</strong> ${document.getElementById('overallComments').value || "None"}</p>
+                    </div>
+                    <table border="1" cellpadding="8" style="border-collapse: collapse; width: 100%; font-size: 14px;">
+                        <tr style="background-color: #0033A0; color: white;">
+                            <th style="text-align: left;">Category / Question</th>
+                            <th style="width: 60px;">Score</th>
+                            <th>Notes</th>
+                        </tr>`;
+
+            let loopIdx = 1;
+            questions.forEach(group => {
+                pdfHtml += `<tr style="background-color: #e0e0e0;"><td colspan="3"><strong>${group.cat}</strong></td></tr>`;
+                group.q.forEach(text => {
+                    let sel = document.querySelector(`input[name="q${loopIdx}"]:checked`);
+                    let note = document.getElementById(`note${loopIdx}`).value;
+                    let score = sel ? sel.value : "N/A";
+                    if(score === "0") score = "N/A";
+                    pdfHtml += `<tr><td>${text}</td><td style="text-align: center; font-weight: bold;">${score}</td><td>${note}</td></tr>`;
+                    loopIdx++;
+                });
+            });
+            pdfHtml += `</table></div>`;
+            
+            // Put the HTML into our hidden field
+            document.getElementById('hiddenReportHtml').value = pdfHtml;
 
             const formData = new URLSearchParams(new FormData(form));
 
@@ -334,12 +375,12 @@
                     body: formData,
                     mode: 'no-cors' 
                 });
-                alert("Pop In Submitted Successfully!");
+                alert("Success! The PDF has been emailed to issacm@caliches.com.");
                 location.reload(); 
             } catch (err) {
                 alert("Connection error. Please check your internet and try again.");
                 btn.disabled = false;
-                btn.innerText = "🚀 SUBMIT POP IN REPORT";
+                btn.innerText = "🚀 SUBMIT & EMAIL POP IN REPORT";
             }
         }
     </script>
