@@ -182,9 +182,15 @@
         async function submitAudit() {
             const btn = document.getElementById('submitBtn');
             const form = document.getElementById('auditForm');
-            if(!document.getElementById('loc').value || !document.getElementById('mgr').value) return alert("Fill out the top info!");
+            if(!document.getElementById('loc').value || !document.getElementById('mgr').value || !document.getElementById('sldr').value) {
+                return alert("Please fill out the Location, Manager, and Shift Leader!");
+            }
             
-            btn.innerText = "Submitting...";
+            let count = 0;
+            for(let i=1; i<=16; i++) if(document.querySelector(`input[name="q${i}"]:checked`)) count++;
+            if(count < 16) return alert("Please complete all 16 items before submitting!");
+
+            btn.innerText = "Sending to Office...";
             btn.disabled = true;
 
             const formData = new URLSearchParams(new FormData(form));
@@ -195,10 +201,10 @@
                     body: formData,
                     mode: 'no-cors' 
                 });
-                alert("Audit Submitted Successfully!");
+                alert("Inspection Submitted Successfully! Scores are in the Google Sheet.");
                 location.reload(); 
             } catch (err) {
-                alert("Connection error. Try again.");
+                alert("Connection error. Please try submitting again.");
                 btn.disabled = false;
                 btn.innerText = "🚀 SUBMIT TO OFFICE";
             }
