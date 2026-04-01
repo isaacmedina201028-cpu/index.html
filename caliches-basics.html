@@ -22,7 +22,7 @@
             background-color: var(--caliches-blue);
             color: var(--white);
             text-align: center;
-            padding: 20px 15px;
+            padding: 25px 15px;
             position: sticky;
             top: 0; z-index: 100;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -32,6 +32,7 @@
             width: auto; 
             display: block; 
             margin: 0 auto 10px auto;
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2));
         }
         .header p { margin: 0; font-size: 13px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
         .container { max-width: 600px; margin: 15px auto; padding: 0 15px; }
@@ -93,7 +94,7 @@
 <body>
 
     <div class="header">
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAgVBMVEUAAAD///+7u7uXl5e3t7f///8AAAAAAAAAAACXl5e7u7v///8AAAAAAACXl5e7u7v///8AAAAAAACXl5e7u7v///8AAAAAAACXl5e7u7v///8AAAAAAACXl5e7u7v///8AAAAAAACXl5e7u7v///8AAAAAAACXl5e7u7v///8AAAAAAAD6O5MhAAAAFXRSTlMAAAAAAEBAQEBAQEBAQEBAQEBAQPrr65YAAARCSURBVHja7Z1bVwIhEIbN4VBCFBDUUs//f/NlX4XjEtoZBy5e71vXmX43M99OEhLREUccceT/Bw2W13W3pP+YV6Isc6L8D5/8u7Tf9B4Vv8fWz04V5Cfs5f8lqR+Bsn8m5b4AxfXv7uF5VNxq0Nf+9zXzN+u35/2Kvxm/X3I35y7jN8Pfx6Y/4bU3+z18/tqPfnrT3w68H3m/8XjN7w9wHh76b/eG55N2v/XbY99rvR94PuZ/yfsrvVfFp/Pvx+8X44/Kbw68P74/7uYOfuX3O/ZzzNfdLztf895mvefD18GveN7znfM97zve8H3nf875nvufB1+Ov+X8Pvj78uuv/f+B24PYA4bYCtwXcLXFXwN0KdwV+X+CugLsK7gq4K+GugLsC7iq4q+CugrsK7ga4G+CugLsB7ga4G+CugLsB7ga4G+BuhbsC7vN/n/v/3p5Kvx//fuz9N+/H3v/5fuv9v+9f43/rf2f8b50f7p4G93uDe9rgngX3fYO7K7j7G9wX4O5rcL/P3Zfgbv34Nbi7Ety9HbeH4/Zw3B6O28Nxe/f3h9Xf71f/Nrz+/Xzz7+O3n59f/v5666vrr6++/Pzyd9fXf1/59Vb9/fVXX375+Uv/vuzvzr477XOnfXbU5476bK/PDXrdoNcNepWgNwh6g6A3CnqDoDcIeqOgNwh6o6A3CHqDoDcIeoOgNwh6o6A3CnqDoNcJepWglwl6iaD3CXqfoPcJepegNwp6o6A3CHqToPcJerOg9wl6o6B3CXqfoNcLepmgXyh7n6D3CnqdoHcJep2gF7XvRc17WfNu1rwXNe9FzXtZ857YvCc2b9m6L8veZeuuWHfFuyvWXfHuwuG7cPhi/77mXbMv7H6v++W6f6H/r9f99/w7rvuX+He2+8/595Z/H3nf8+8T/z57f8T+/S/6L//7X//7v//7v//7v//7v/8n//7nf/4f/v2/5P3P3NfO/pW/8Nf8644/5193/Fn/pufP9f//vWbe/55/3fmveP8V77/ivZreX02/mr+a95vXm9eb35vfm8+bz6vOf/V5zXvNf40HXw+/5n3De873vOd8z/uR9z3ve+Z7XpP3HnxN/nrA1fTvh63p329f6/8b9X99/V9Hfx/8O+p/G/Tf8K+fP3/++X789vPzy89Pn58+P34+/Txy4+fTj6/vDndPDnt/N7zN4fN75Nf5pf5/T//7/v8v86eP/98fv789XHz9e/H5w/+v/z5n//n/+9fvv335/fvD68fbw8eHiYfXi+8fbyX/DxeM35+XzN+P1wX/ny+Hvx5+Hrx4+b7xb8PD5/f5r9m/Gb4pP31gK//wG+/GfyG/Wz4HfbjA397+N/9YfgX/m74Hfb9C/8N+/6FP+F/5t+p4vPY+tkpf9SgVvFv7lXxP7mPxf/p3vH//B9r/sD16//A9fV/0PoT9vUftH7C/vz/7I9W/+n+bP8v9t/w5wO3P3S6+7Xf9v/254477rjjjjv//N8U/w8SjQWJRgAAAABJRU5ErkJggg==" alt="Caliche's Logo" class="logo-img">
+        <img src="logo.png" alt="Caliche's Logo" class="logo-img">
         <p>4 NUMBER 1s INSPECTION</p>
     </div>
 
@@ -131,7 +132,7 @@
     </div>
 
     <script>
-        // Update G_URL with your actual Web App URL
+        // CRITICAL: Replace the link below with your Google Apps Script URL
         const G_URL = 'PASTE_YOUR_GOOGLE_URL_HERE';
 
         const questions = [
