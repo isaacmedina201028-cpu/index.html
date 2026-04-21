@@ -243,6 +243,7 @@
         ];
 
         let totalQuestions = 0;
+        let uploadedPhotos = []; // NEW: Array to hold multiple photos
 
         window.onload = function() {
             let html = "";
@@ -250,6 +251,7 @@
             
             questions.forEach(group => {
                 html += `<div class="category"><h2>${group.cat}</h2>`;
+                
                 group.q.forEach(text => {
                     html += `
                     <div class="question">
@@ -265,6 +267,17 @@
                     </div>`;
                     qIdx++;
                 });
+
+                // MULTIPLE IMAGE UPLOADER
+                if (group.cat === "Cleanliness") {
+                    html += `
+                    <div style="margin-top: 15px; padding: 15px; background: #fafafa; border-radius: 8px; border: 2px dashed #ddd; text-align: center;">
+                        <p style="margin: 0 0 10px 0; font-weight: bold; color: var(--caliches-blue);">📸 Attach Cleanliness Photos (Optional)</p>
+                        <input type="file" id="cleanImage" accept="image/*" multiple onchange="compressAndPreview(event)" style="margin-bottom: 10px; width: 100%;">
+                        <div id="imgPreviewContainer" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px;"></div>
+                    </div>`;
+                }
+
                 html += `</div>`;
             });
             
@@ -278,6 +291,50 @@
             
             totalQuestions = qIdx - 1;
         };
+
+        // NEW: MULTIPLE IMAGE COMPRESSOR FUNCTION
+        function compressAndPreview(event) {
+            let files = event.target.files;
+            if(!files || files.length === 0) return;
+
+            let previewContainer = document.getElementById('imgPreviewContainer');
+            previewContainer.innerHTML = ''; // Clear old previews if they pick new files
+            uploadedPhotos = []; // Clear old photo data
+
+            Array.from(files).forEach(file => {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    let img = new Image();
+                    img.onload = function() {
+                        let canvas = document.createElement('canvas');
+                        let ctx = canvas.getContext('2d');
+                        
+                        let maxWidth = 800;
+                        let scaleSize = maxWidth / img.width;
+                        if(scaleSize > 1) scaleSize = 1;
+
+                        canvas.width = img.width * scaleSize;
+                        canvas.height = img.height * scaleSize;
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                        let compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                        uploadedPhotos.push(compressedBase64); // Save to our array
+
+                        // Build the visual preview on the screen
+                        let previewImg = document.createElement('img');
+                        previewImg.src = compressedBase64;
+                        previewImg.style.width = '100px';
+                        previewImg.style.height = '100px';
+                        previewImg.style.borderRadius = '8px';
+                        previewImg.style.border = '1px solid #ccc';
+                        previewImg.style.objectFit = 'cover';
+                        previewContainer.appendChild(previewImg);
+                    }
+                    img.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            });
+        }
 
         function calc() {
             let totalScore = 0;
@@ -353,7 +410,23 @@
                     <div style="background-color: #f4f4f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                         <h2 style="color: #E91E63; margin: 0;">Final Score: ${document.getElementById('pct').innerText}% (${document.getElementById('st').innerText})</h2>
                         <p style="margin-bottom: 0;"><strong>Overall Comments:</strong> ${document.getElementById('overallComments').value || "None"}</p>
-                    </div>
+                    </div>`;
+
+            // EMBED ALL UPLOADED PHOTOS INTO THE PDF
+            if (uploadedPhotos.length > 0) {
+                pdfHtml += `
+                <div style="margin-bottom: 20px; page-break-inside: avoid;">
+                    <h3 style="color: #0033A0;">Cleanliness Photo Verification:</h3>
+                    <div style="text-align: center;">`;
+                
+                uploadedPhotos.forEach(photoData => {
+                    pdfHtml += `<img src="${photoData}" style="max-width: 300px; max-height: 300px; border: 1px solid #ccc; border-radius: 8px; margin: 5px; display: inline-block;">`;
+                });
+                
+                pdfHtml += `</div></div>`;
+            }
+
+            pdfHtml += `
                     <table border="1" cellpadding="8" style="border-collapse: collapse; width: 100%; font-size: 14px;">
                         <tr style="background-color: #0033A0; color: white;">
                             <th style="text-align: left;">Category / Question</th>
