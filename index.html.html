@@ -104,13 +104,9 @@
         }
         .save-btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
 
-        /* Apple/Mobile Native Print Settings */
+        /* Guarantees the background is white for printing */
         @media print {
             body { background-color: white !important; }
-            .save-btn, .photo-upload-section { display: none !important; }
-            .header { position: static !important; padding: 10px !important; }
-            .container { margin: 0 !important; box-shadow: none !important; max-width: 100% !important; }
-            .category { box-shadow: none !important; border-top: 4px solid var(--caliches-pink) !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
@@ -407,9 +403,8 @@
             btn.innerText = "Sending securely...";
             btn.disabled = true;
 
-            // Build the PDF Email Body
             let pdfHtml = `
-                <div style="font-family: Arial, sans-serif; color: #333; padding: 10px;">
+                <div style="font-family: Arial, sans-serif; color: #333; padding: 10px; max-width: 800px; margin: 0 auto;">
                     <h1 style="color: #0033A0;">Caliche's Pop In Inspection</h1>
                     <table style="width: 100%; margin-bottom: 20px;">
                         <tr>
@@ -461,26 +456,32 @@
             
             document.getElementById('hiddenReportHtml').value = pdfHtml;
 
-            // Safely package data
             const formData = new FormData(form);
 
-            // Step 1: Send the email
             fetch(G_URL, {
                 method: 'POST',
                 body: formData,
                 mode: 'no-cors' 
             }).then(() => {
                 
-                // Step 2: The email was successful. Transform the button for Tap 2!
                 btn.disabled = false;
                 btn.style.backgroundColor = "var(--pass-green)";
                 btn.innerText = "✅ SENT! TAP HERE TO PRINT / SAVE PDF";
                 
-                // When they tap the button the second time, it opens the print window flawlessly!
+                // THE MAGIC TRICK: When tapped, erase the form, paste the report, and print.
                 btn.onclick = function(e) {
                     e.preventDefault();
-                    window.print(); // Opens native Apple Print/Save menu
-                    setTimeout(() => location.reload(), 2000); // Resets form after saving
+                    
+                    // 1. Wipe the screen and paste the clean PDF report
+                    document.body.innerHTML = pdfHtml;
+                    
+                    // 2. Wait just a split second for photos to appear, then open print menu
+                    setTimeout(() => {
+                        window.print();
+                        
+                        // 3. After they are done printing/saving, reload the page to bring the form back!
+                        setTimeout(() => location.reload(), 2000); 
+                    }, 500);
                 };
 
             }).catch((err) => {
