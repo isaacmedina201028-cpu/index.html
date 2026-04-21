@@ -243,7 +243,7 @@
         ];
 
         let totalQuestions = 0;
-        let uploadedPhotos = []; // NEW: Array to hold multiple photos
+        let uploadedPhotos = []; // Array to hold multiple photos
 
         window.onload = function() {
             let html = "";
@@ -268,7 +268,7 @@
                     qIdx++;
                 });
 
-                // MULTIPLE IMAGE UPLOADER
+                // MULTIPLE IMAGE UPLOADER LOCATED IN CLEANLINESS SECTION
                 if (group.cat === "Cleanliness") {
                     html += `
                     <div style="margin-top: 15px; padding: 15px; background: #fafafa; border-radius: 8px; border: 2px dashed #ddd; text-align: center;">
@@ -292,7 +292,7 @@
             totalQuestions = qIdx - 1;
         };
 
-        // NEW: MULTIPLE IMAGE COMPRESSOR FUNCTION
+        // MULTIPLE IMAGE COMPRESSOR FUNCTION
         function compressAndPreview(event) {
             let files = event.target.files;
             if(!files || files.length === 0) return;
