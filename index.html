@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Caliche's Pop In Inspection</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
         :root {
             --caliches-blue: #0033A0;
@@ -160,12 +163,11 @@
                 <input type="hidden" id="hiddenReportHtml" name="ReportHTML">
             </div>
 
-            <button type="button" id="submitBtn" class="save-btn" onclick="submitAudit()">🚀 SUBMIT & EMAIL POP IN REPORT</button>
+            <button type="button" id="submitBtn" class="save-btn" onclick="submitAudit()">🚀 SUBMIT, DOWNLOAD & EMAIL REPORT</button>
         </form>
     </div>
 
     <script>
-        // LIVE GOOGLE APPS SCRIPT WEBHOOK URL
         const G_URL = 'https://script.google.com/macros/s/AKfycbw83dV7F5nc40KZcck62BM5Oqya0JKv4RTrEO5Ad1EpwRzSVKjI0XOAs_9twOwzB_dFDA/exec';
 
         const questions = [
@@ -243,7 +245,7 @@
         ];
 
         let totalQuestions = 0;
-        let uploadedPhotos = []; // Array to hold multiple photos
+        let uploadedPhotos = []; 
 
         window.onload = function() {
             let html = "";
@@ -268,7 +270,6 @@
                     qIdx++;
                 });
 
-                // MULTIPLE IMAGE UPLOADER LOCATED IN CLEANLINESS SECTION
                 if (group.cat === "Cleanliness") {
                     html += `
                     <div style="margin-top: 15px; padding: 15px; background: #fafafa; border-radius: 8px; border: 2px dashed #ddd; text-align: center;">
@@ -292,14 +293,13 @@
             totalQuestions = qIdx - 1;
         };
 
-        // MULTIPLE IMAGE COMPRESSOR FUNCTION
         function compressAndPreview(event) {
             let files = event.target.files;
             if(!files || files.length === 0) return;
 
             let previewContainer = document.getElementById('imgPreviewContainer');
-            previewContainer.innerHTML = ''; // Clear old previews if they pick new files
-            uploadedPhotos = []; // Clear old photo data
+            previewContainer.innerHTML = ''; 
+            uploadedPhotos = []; 
 
             Array.from(files).forEach(file => {
                 let reader = new FileReader();
@@ -318,9 +318,8 @@
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                         let compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-                        uploadedPhotos.push(compressedBase64); // Save to our array
+                        uploadedPhotos.push(compressedBase64); 
 
-                        // Build the visual preview on the screen
                         let previewImg = document.createElement('img');
                         previewImg.src = compressedBase64;
                         previewImg.style.width = '100px';
@@ -393,9 +392,8 @@
             btn.innerText = "Generating PDF & Sending Email...";
             btn.disabled = true;
 
-            // BUILD THE PDF DOCUMENT FORMAT
             let pdfHtml = `
-                <div style="font-family: Arial, sans-serif; color: #333;">
+                <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
                     <h1 style="color: #0033A0;">Caliche's Pop In Inspection</h1>
                     <table style="width: 100%; margin-bottom: 20px;">
                         <tr>
@@ -412,7 +410,6 @@
                         <p style="margin-bottom: 0;"><strong>Overall Comments:</strong> ${document.getElementById('overallComments').value || "None"}</p>
                     </div>`;
 
-            // EMBED ALL UPLOADED PHOTOS INTO THE PDF
             if (uploadedPhotos.length > 0) {
                 pdfHtml += `
                 <div style="margin-bottom: 20px; page-break-inside: avoid;">
@@ -450,21 +447,41 @@
             
             document.getElementById('hiddenReportHtml').value = pdfHtml;
 
+            // Generate Local PDF Download File Name
+            let locName = document.getElementById('loc').value.replace(/[^a-z0-9]/gi, '_');
+            let dateVal = document.getElementById('dt').value;
+            let fileName = `Caliches_PopIn_${locName}_${dateVal}.pdf`;
+
+            // Prepare the HTML container for the PDF generator
+            let tempDiv = document.createElement('div');
+            tempDiv.innerHTML = pdfHtml;
+
+            let opt = {
+                margin:       0.5,
+                filename:     fileName,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
             const formData = new URLSearchParams(new FormData(form));
 
-            try {
-                await fetch(G_URL, {
-                    method: 'POST',
-                    body: formData,
-                    mode: 'no-cors' 
-                });
-                alert("Success! The PDF has been emailed to the office.");
-                location.reload(); 
-            } catch (err) {
-                alert("Connection error. Please check your internet and try again.");
-                btn.disabled = false;
-                btn.innerText = "🚀 SUBMIT & EMAIL POP IN REPORT";
-            }
+            // Start the Download, then Send the Email
+            html2pdf().set(opt).from(tempDiv).save().then(async () => {
+                try {
+                    await fetch(G_URL, {
+                        method: 'POST',
+                        body: formData,
+                        mode: 'no-cors' 
+                    });
+                    alert("Success! The PDF has been downloaded to your device AND emailed to the office.");
+                    location.reload(); 
+                } catch (err) {
+                    alert("Connection error sending the email, but the PDF was saved to your device!");
+                    btn.disabled = false;
+                    btn.innerText = "🚀 SUBMIT & EMAIL POP IN REPORT";
+                }
+            });
         }
     </script>
 </body>
