@@ -788,7 +788,7 @@
         });
         html += '<div class="sp-weekbar" style="margin-top:14px;border-radius:10px;"><span>This week</span><span><b>'+total.toFixed(1)+' hrs</b> scheduled</span></div>';
         html += '<div id="weekConfirmBar" style="margin-top:10px;"></div>';
-        html += '<button onclick="if(typeof openEmployeeHome===\'function\')openEmployeeHome();" style="width:100%;margin-top:12px;background:#fff;border:1.5px solid #cfe0f5;color:#185FA5;border-radius:11px;padding:12px;font-size:14px;font-weight:800;cursor:pointer;">&#128588; Open shifts &amp; trades &rarr;</button>';
+        html += '<button onclick="if(typeof openEmployeeHome===\'function\')openEmployeeHome();" style="width:100%;margin-top:12px;background:#fff;border:1.5px solid #cfe0f5;color:#185FA5;border-radius:11px;padding:12px;font-size:14px;font-weight:800;cursor:pointer;">Can&rsquo;t make a shift? &rarr;</button>';
         html += '<p style="font-size:12px;color:#5b6675;margin-top:10px;">Only published shifts are shown &mdash; if your week looks empty, your manager may not have posted it yet. Need a day off? Use <b>Request time off</b> in the menu.</p></div>';
         document.getElementById('schedGrid').innerHTML = html;
         loadWeekConfirm(schedFmt(schedState.weekStart), (mine.shifts||[]).length>0);
