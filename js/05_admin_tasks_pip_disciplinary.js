@@ -917,6 +917,7 @@
             return;
         }
         empHomeState.shifts = d.shifts || [];
+        window._empHome = d;
         var name = (d.employee && d.employee.name) ? d.employee.name : 'there';
         var html = '<div style="background:#fff;border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 4px 6px rgba(0,0,0,0.05);">' +
             '<h2 style="margin:0;color:var(--caliches-blue);font-size:20px;">Hi, ' + escapeHtml(name) + '! &#128075;</h2>' +
@@ -968,8 +969,22 @@
         if (!sw.length) { html += '<p style="color:#6b7686;font-size:13px;margin:0;">None &mdash; use "Can’t work this?" on a shift above if something comes up.</p>'; }
         else {
             sw.forEach(function(w, i) {
-                html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;' + (i < sw.length - 1 ? 'border-bottom:1px solid #eee;' : '') + '">' +
-                    '<span style="font-size:14px;color:#333;">' + escapeHtml(w.date || '') + '  ' + escapeHtml(w.start || '') + '-' + escapeHtml(w.end || '') + (w.manager_note ? '<br><span style="font-size:12px;color:#6b7686;">Note: ' + escapeHtml(w.manager_note) + '</span>' : '') + '</span>' + ehChip(w.status) + '</div>';
+                var st = (w.status || '').toLowerCase();
+                var head = escapeHtml(w.date || '') + '  ' + escapeHtml(w.start || '') + '-' + escapeHtml(w.end || '') + (w.location ? '  @ ' + escapeHtml(w.location) : '');
+                var reason = w.note ? '<div style="font-size:12px;color:#6b7686;margin-top:2px;">' + escapeHtml(w.note) + '</div>' : '';
+                var sub = '', actions = '';
+                if (st === 'open' || st === 'pending') {
+                    sub = '<div style="font-size:12.5px;color:#8a5200;font-weight:700;margin-top:4px;">&#9203; Pending &mdash; this is still your shift until a manager approves it.</div>';
+                    actions = mgrContactButtons();
+                } else if (st === 'approved') {
+                    sub = '<div style="font-size:12.5px;color:#1b6b35;font-weight:700;margin-top:4px;">&#9989; Approved &mdash; you\'re cleared.</div>';
+                } else if (st === 'denied') {
+                    sub = '<div style="font-size:12.5px;color:#a01b3e;font-weight:700;margin-top:4px;">&#10060; Not approved &mdash; you\'re still on this shift.</div>';
+                }
+                var mnote = w.manager_note ? '<div style="font-size:12px;color:#6b7686;margin-top:2px;">Manager note: ' + escapeHtml(w.manager_note) + '</div>' : '';
+                html += '<div style="padding:10px 0;' + (i < sw.length - 1 ? 'border-bottom:1px solid #eee;' : '') + '">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span style="font-size:14px;color:#333;">' + head + '</span>' + ehChip(st === 'open' ? 'Pending' : (w.status || '')) + '</div>' +
+                    reason + sub + mnote + actions + '</div>';
             });
         }
         html += '</div>';
@@ -1023,6 +1038,17 @@
         }, function(){ btn.disabled=false; btn.innerText='Submit Request'; });
     }
 
+    // Call/text buttons for the employee's store manager (from app_emp_home.manager).
+    function mgrContactButtons() {
+        var mgr = (window._empHome && window._empHome.manager) || null;
+        if (!mgr || !mgr.phone) { return '<div style="font-size:12px;color:#6b7686;margin-top:6px;">Reach out to your manager or scheduling to get this approved &mdash; don\'t just wait.</div>'; }
+        var digits = ('' + mgr.phone).replace(/[^0-9+]/g, '');
+        var first = mgr.name ? escapeHtml(('' + mgr.name).split(' ')[0]) : 'your manager';
+        return '<div style="display:flex;gap:8px;margin-top:7px;">' +
+            '<a href="sms:' + digits + '" style="flex:1;text-align:center;background:#0d6eaf;color:#fff;text-decoration:none;border-radius:8px;padding:9px;font-size:12.5px;font-weight:800;">&#128241; Text ' + first + '</a>' +
+            '<a href="tel:' + digits + '" style="flex:1;text-align:center;background:#1f7a3d;color:#fff;text-decoration:none;border-radius:8px;padding:9px;font-size:12.5px;font-weight:800;">&#128222; Call ' + first + '</a></div>';
+    }
+
     // ===== "CAN'T WORK THIS SHIFT" — respectful coverage request with a reason =====
     // Deliberately NOT a marketplace: employees never grab hours or beg coworkers. When someone
     // genuinely can't work a shift (sick, injury, school, family) they flag it with a reason, as
@@ -1059,9 +1085,32 @@
         withPin(function(pin){
             supabaseClient.rpc('app_swap_create',{p_username:currentUser.username,p_password:pin,p_shift_id:window._cwShiftId,p_note:note}).then(function(res){
                 if(res.error){ if(res.error.code==='42501') sessionPin=null; if(msg) msg.textContent='Could not send: '+res.error.message; return; }
-                cwClose(); alert('Sent to your manager. They’ll arrange coverage — thanks for the heads up.'); loadEmployeeHome();
+                cwShowPending(); loadEmployeeHome();
             }).catch(function(){ if(msg) msg.textContent='Connection error.'; });
         });
+    }
+    // After submitting: make it unmistakable this is NOT approved, and hand them a one-tap way to reach out.
+    function cwShowPending(){
+        var m=document.getElementById('cwModal'); if(!m) return;
+        m.innerHTML='<div style="background:#fff;border-radius:14px;max-width:440px;width:100%;padding:20px;box-shadow:0 16px 50px rgba(0,0,0,.3);">'+
+          '<h3 style="margin:0 0 8px;color:#1f2a44;">Sent &mdash; but not approved yet</h3>'+
+          '<div style="background:#fff6e6;border:1px solid #f0d9a8;border-radius:11px;padding:12px 13px;margin-bottom:12px;">'+
+            '<div style="font-weight:900;font-size:14px;color:#8a5200;margin-bottom:3px;">&#9888;&#65039; This is still your shift</div>'+
+            '<div style="font-size:13px;color:#6b5220;line-height:1.5;">You&rsquo;re still scheduled until a manager approves it. Don&rsquo;t just wait &mdash; reach out now so it actually gets approved.</div>'+
+          '</div>'+
+          cwPendingContactButtons()+
+          '<button onclick="cwClose()" style="width:100%;margin-top:10px;background:#eef0f3;color:#5b6472;border:none;border-radius:10px;padding:11px;font-weight:700;cursor:pointer;">Done</button>'+
+          '<div style="font-size:11px;color:#9aa2ad;margin-top:9px;text-align:center;">You&rsquo;ll get a notification when your manager approves or denies it.</div>'+
+          '</div>';
+    }
+    function cwPendingContactButtons(){
+        var mgr=(window._empHome && window._empHome.manager)||null;
+        if(!mgr || !mgr.phone){ return '<div style="font-size:12.5px;color:#6b7686;text-align:center;">Call or text your store manager / scheduling to confirm.</div>'; }
+        var digits=(''+mgr.phone).replace(/[^0-9+]/g,'');
+        var first=mgr.name?escapeHtml((''+mgr.name).split(' ')[0]):'your manager';
+        return '<div style="display:flex;gap:8px;">'+
+            '<a href="sms:'+digits+'" style="flex:1;text-align:center;background:#0d6eaf;color:#fff;text-decoration:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;">&#128241; Text '+first+'</a>'+
+            '<a href="tel:'+digits+'" style="flex:1;text-align:center;background:#1f7a3d;color:#fff;text-decoration:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;">&#128222; Call '+first+'</a></div>';
     }
 
     // Manager: pending requests
